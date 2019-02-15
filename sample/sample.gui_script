@@ -1,0 +1,6 @@
+function init(self)
+	gui.set_text(gui.get_node("version"), "version: " .. glinfo.version())
+	gui.set_text(gui.get_node("size"), "Max texture size: " .. glinfo.texture_size())
+	local npot = glinfo.extension("GL_ARB_texture_non_power_of_two")
+	gui.set_text(gui.get_node("pot"), "NPOT textures: " .. (npot and "yes" or "no"))
+end
