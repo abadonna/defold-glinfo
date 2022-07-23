@@ -8,6 +8,7 @@
 
 static int Version(lua_State* L)
 {
+    DM_LUA_STACK_CHECK(L, 1);
     char* str = (char*)glGetString(GL_VERSION);
     lua_pushstring(L, str);
     return 1;
@@ -15,19 +16,47 @@ static int Version(lua_State* L)
 
 static int Extension(lua_State* L)
 {
+    DM_LUA_STACK_CHECK(L, 1);
     const char* name = luaL_checkstring(L, 1);
-    char* extensions = (char*)glGetString(GL_EXTENSIONS);
-    char* res = strstr (extensions, name);
-    lua_pushboolean(L, res ? true : false);
+    GLint major;
+    int i;
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    if(major < 3)
+    {
+        // Check if extension is in the old style OpenGL extensions string
+        char* extensions = (char*)glGetString(GL_EXTENSIONS);
+        if(extensions != NULL)
+        {
+            char* res = strstr(extensions, name);
+            lua_pushboolean(L, res ? true : false);
+        }
+    }
+    else
+    {
+        // Check if extension is in the modern OpenGL extensions string list
+        GLint count;
+        glGetIntegerv(GL_NUM_EXTENSIONS, &count);
+        bool supported = false;
+        for(i = 0;  i < count;  i++)
+        {
+            if(strcmp((const char*)glGetStringi(GL_EXTENSIONS, i), name) == 0)
+            {
+                supported = true;
+                break;
+            }
+        }
+        lua_pushboolean(L, supported);
+    }
+    
     return 1;
 }
 
 static int TextureSize(lua_State* L)
 {
+    DM_LUA_STACK_CHECK(L, 1);
     int nTexSize = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &nTexSize);
     lua_pushnumber(L, nTexSize);
-
     return 1;
 }
 
